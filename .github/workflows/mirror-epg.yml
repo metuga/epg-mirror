@@ -31,8 +31,6 @@ jobs:
           ls -lh site/epg.xml
 
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true   # liga o Pages sozinho na primeira execucao
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
