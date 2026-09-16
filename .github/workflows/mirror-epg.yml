@@ -1,0 +1,39 @@
+name: Espelhar EPG descomprimido
+
+on:
+  push:
+    branches: [main]         # primeira publicacao, logo apos o push
+  schedule:
+    - cron: "17 4,16 * * *"  # duas vezes por dia (UTC)
+  workflow_dispatch:         # botao "Run workflow" no separador Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descarregar e descomprimir
+        run: |
+          mkdir -p site
+          curl -fsSL "https://JohnPulse.github.io/iptv-epg/epg-strong8k.xml.gz" -o epg.xml.gz
+          gzip -dc epg.xml.gz > site/epg.xml
+          # falha o job se o XML vier truncado ou vazio
+          test "$(stat -c%s site/epg.xml)" -gt 1000000
+          tail -c 200 site/epg.xml | grep -q '</tv>'
+          ls -lh site/epg.xml
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true   # liga o Pages sozinho na primeira execucao
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4
